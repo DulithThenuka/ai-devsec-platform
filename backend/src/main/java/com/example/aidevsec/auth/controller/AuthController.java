@@ -1,6 +1,7 @@
 package com.example.aidevsec.auth.controller;
 
 import com.example.aidevsec.auth.dto.AuthResponse;
+import com.example.aidevsec.auth.dto.LoginRequest;
 import com.example.aidevsec.auth.dto.RegisterRequest;
 import com.example.aidevsec.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -24,5 +25,14 @@ public class AuthController {
         return new AuthResponse(
                 "User registered successfully"
         );
+    }
+    @PostMapping("/login")
+    public AuthResponse login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+
+        String token = authService.login(request);
+
+        return new AuthResponse(token);
     }
 }

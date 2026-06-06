@@ -1,6 +1,8 @@
 package com.example.aidevsec.auth.service;
 
+import com.example.aidevsec.auth.dto.LoginRequest;
 import com.example.aidevsec.auth.dto.RegisterRequest;
+import com.example.aidevsec.security.jwt.JwtService;
 import com.example.aidevsec.user.entity.Role;
 import com.example.aidevsec.user.entity.User;
 import com.example.aidevsec.user.repository.UserRepository;
@@ -17,6 +19,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public void register(RegisterRequest request) {
 
@@ -34,5 +37,27 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+    }
+    public String login(LoginRequest request) {
+
+        User user = userRepository
+                .findByEmail(request.email())
+                .orElseThrow(
+                        () -> new RuntimeException("User not found")
+                );
+
+        boolean matches =
+                passwordEncoder.matches(
+                        request.password(),
+                        user.getPassword()
+                );
+
+        if (!matches) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        return jwtService.generateToken(
+                user.getEmail()
+        );
     }
 }
