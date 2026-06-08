@@ -3,9 +3,9 @@ package com.example.aidevsec.scanner.service;
 import com.example.aidevsec.project.entity.Project;
 import com.example.aidevsec.project.repository.ProjectRepository;
 import com.example.aidevsec.scanner.dto.ScanResponse;
-import com.example.aidevsec.scanner.entity.ScanJob;
-import com.example.aidevsec.scanner.entity.ScanStatus;
+import com.example.aidevsec.scanner.entity.*;
 import com.example.aidevsec.scanner.repository.ScanJobRepository;
+import com.example.aidevsec.scanner.repository.ScanResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +17,7 @@ import java.util.UUID;
 public class ScanService {
 
     private final ScanJobRepository scanJobRepository;
+    private final ScanResultRepository scanResultRepository;
     private final ProjectRepository projectRepository;
 
     public ScanResponse startScan(
@@ -29,9 +30,7 @@ public class ScanService {
                 .orElseThrow();
 
         if (!project.getOwnerEmail().equals(userEmail)) {
-            throw new RuntimeException(
-                    "Access denied"
-            );
+            throw new RuntimeException("Access denied");
         }
 
         ScanJob scanJob = ScanJob.builder()
@@ -42,6 +41,27 @@ public class ScanService {
                 .build();
 
         scanJobRepository.save(scanJob);
+
+        // Demo scan results
+        scanResultRepository.save(
+                ScanResult.builder()
+                        .id(UUID.randomUUID())
+                        .scanJobId(scanJob.getId())
+                        .title("Outdated Spring Boot Version")
+                        .description("Project uses vulnerable dependency")
+                        .severity(Severity.HIGH)
+                        .build()
+        );
+
+        scanResultRepository.save(
+                ScanResult.builder()
+                        .id(UUID.randomUUID())
+                        .scanJobId(scanJob.getId())
+                        .title("Hardcoded Secret")
+                        .description("Potential API key detected")
+                        .severity(Severity.CRITICAL)
+                        .build()
+        );
 
         return new ScanResponse(
                 scanJob.getId(),
